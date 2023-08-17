@@ -1,0 +1,23 @@
+syntax = "proto3";
+option go_package = "/grpc";
+
+service Storage {
+  rpc Search(SearchRequest) returns (Response);
+  rpc Get(GetRequest) returns (Response);
+}
+
+message GetRequest {
+  string id = 1;
+}
+
+message SearchRequest {
+  string term = 1;
+}
+
+message Response {
+  string id = 1;
+  string nick = 2;
+  string name = 3;
+  string stack = 4;
+  string birth = 5;
+}
