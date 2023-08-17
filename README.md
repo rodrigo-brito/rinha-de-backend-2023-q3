@@ -1,5 +1,7 @@
 # Rinha de Backend - 2023
 
+Participaćào da rinha de back-end 2023: https://github.com/zanfranceschi/rinha-de-backend-2023-q3
+
 ## Services
 
 - API - `cmd/api`
