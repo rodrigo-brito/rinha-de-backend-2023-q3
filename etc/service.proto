@@ -2,8 +2,20 @@ syntax = "proto3";
 option go_package = "/grpc";
 
 service Storage {
-  rpc Search(SearchRequest) returns (Response);
-  rpc Get(GetRequest) returns (Response);
+  rpc Search(SearchRequest) returns (SearchResponse);
+  rpc Get(GetRequest) returns (User);
+  rpc Total(TotalRequest) returns (TotalResponse);
+  rpc Save(User) returns (SaveResponse);
+}
+
+message SaveResponse {
+  string id = 1;
+}
+
+message TotalRequest {}
+
+message TotalResponse {
+  int64 total = 1;
 }
 
 message GetRequest {
@@ -14,10 +26,14 @@ message SearchRequest {
   string term = 1;
 }
 
-message Response {
+message SearchResponse {
+  repeated User users = 1;
+}
+
+message User {
   string id = 1;
   string nick = 2;
   string name = 3;
-  string stack = 4;
+  repeated string stack = 4;
   string birth = 5;
 }

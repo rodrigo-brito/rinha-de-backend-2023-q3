@@ -32,9 +32,13 @@ const _ = twirp.TwirpPackageMinVersion_8_1_0
 // =================
 
 type Storage interface {
-	Search(context.Context, *SearchRequest) (*Response, error)
+	Search(context.Context, *SearchRequest) (*SearchResponse, error)
 
-	Get(context.Context, *GetRequest) (*Response, error)
+	Get(context.Context, *GetRequest) (*User, error)
+
+	Total(context.Context, *TotalRequest) (*TotalResponse, error)
+
+	Save(context.Context, *User) (*SaveResponse, error)
 }
 
 // =======================
@@ -43,7 +47,7 @@ type Storage interface {
 
 type storageProtobufClient struct {
 	client      HTTPClient
-	urls        [2]string
+	urls        [4]string
 	interceptor twirp.Interceptor
 	opts        twirp.ClientOptions
 }
@@ -71,9 +75,11 @@ func NewStorageProtobufClient(baseURL string, client HTTPClient, opts ...twirp.C
 	// Build method URLs: <baseURL>[<prefix>]/<package>.<Service>/<Method>
 	serviceURL := sanitizeBaseURL(baseURL)
 	serviceURL += baseServicePath(pathPrefix, "", "Storage")
-	urls := [2]string{
+	urls := [4]string{
 		serviceURL + "Search",
 		serviceURL + "Get",
+		serviceURL + "Total",
+		serviceURL + "Save",
 	}
 
 	return &storageProtobufClient{
@@ -84,13 +90,13 @@ func NewStorageProtobufClient(baseURL string, client HTTPClient, opts ...twirp.C
 	}
 }
 
-func (c *storageProtobufClient) Search(ctx context.Context, in *SearchRequest) (*Response, error) {
+func (c *storageProtobufClient) Search(ctx context.Context, in *SearchRequest) (*SearchResponse, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "")
 	ctx = ctxsetters.WithServiceName(ctx, "Storage")
 	ctx = ctxsetters.WithMethodName(ctx, "Search")
 	caller := c.callSearch
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *SearchRequest) (*Response, error) {
+		caller = func(ctx context.Context, req *SearchRequest) (*SearchResponse, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*SearchRequest)
@@ -101,9 +107,9 @@ func (c *storageProtobufClient) Search(ctx context.Context, in *SearchRequest) (
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*Response)
+				typedResp, ok := resp.(*SearchResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*Response) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*SearchResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -113,8 +119,8 @@ func (c *storageProtobufClient) Search(ctx context.Context, in *SearchRequest) (
 	return caller(ctx, in)
 }
 
-func (c *storageProtobufClient) callSearch(ctx context.Context, in *SearchRequest) (*Response, error) {
-	out := new(Response)
+func (c *storageProtobufClient) callSearch(ctx context.Context, in *SearchRequest) (*SearchResponse, error) {
+	out := new(SearchResponse)
 	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[0], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -130,13 +136,13 @@ func (c *storageProtobufClient) callSearch(ctx context.Context, in *SearchReques
 	return out, nil
 }
 
-func (c *storageProtobufClient) Get(ctx context.Context, in *GetRequest) (*Response, error) {
+func (c *storageProtobufClient) Get(ctx context.Context, in *GetRequest) (*User, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "")
 	ctx = ctxsetters.WithServiceName(ctx, "Storage")
 	ctx = ctxsetters.WithMethodName(ctx, "Get")
 	caller := c.callGet
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *GetRequest) (*Response, error) {
+		caller = func(ctx context.Context, req *GetRequest) (*User, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*GetRequest)
@@ -147,9 +153,9 @@ func (c *storageProtobufClient) Get(ctx context.Context, in *GetRequest) (*Respo
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*Response)
+				typedResp, ok := resp.(*User)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*Response) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*User) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -159,9 +165,101 @@ func (c *storageProtobufClient) Get(ctx context.Context, in *GetRequest) (*Respo
 	return caller(ctx, in)
 }
 
-func (c *storageProtobufClient) callGet(ctx context.Context, in *GetRequest) (*Response, error) {
-	out := new(Response)
+func (c *storageProtobufClient) callGet(ctx context.Context, in *GetRequest) (*User, error) {
+	out := new(User)
 	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[1], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
+}
+
+func (c *storageProtobufClient) Total(ctx context.Context, in *TotalRequest) (*TotalResponse, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "")
+	ctx = ctxsetters.WithServiceName(ctx, "Storage")
+	ctx = ctxsetters.WithMethodName(ctx, "Total")
+	caller := c.callTotal
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *TotalRequest) (*TotalResponse, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*TotalRequest)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*TotalRequest) when calling interceptor")
+					}
+					return c.callTotal(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*TotalResponse)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*TotalResponse) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *storageProtobufClient) callTotal(ctx context.Context, in *TotalRequest) (*TotalResponse, error) {
+	out := new(TotalResponse)
+	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[2], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
+}
+
+func (c *storageProtobufClient) Save(ctx context.Context, in *User) (*SaveResponse, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "")
+	ctx = ctxsetters.WithServiceName(ctx, "Storage")
+	ctx = ctxsetters.WithMethodName(ctx, "Save")
+	caller := c.callSave
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *User) (*SaveResponse, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*User)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*User) when calling interceptor")
+					}
+					return c.callSave(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*SaveResponse)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*SaveResponse) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *storageProtobufClient) callSave(ctx context.Context, in *User) (*SaveResponse, error) {
+	out := new(SaveResponse)
+	ctx, err := doProtobufRequest(ctx, c.client, c.opts.Hooks, c.urls[3], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
 		if !ok {
@@ -182,7 +280,7 @@ func (c *storageProtobufClient) callGet(ctx context.Context, in *GetRequest) (*R
 
 type storageJSONClient struct {
 	client      HTTPClient
-	urls        [2]string
+	urls        [4]string
 	interceptor twirp.Interceptor
 	opts        twirp.ClientOptions
 }
@@ -210,9 +308,11 @@ func NewStorageJSONClient(baseURL string, client HTTPClient, opts ...twirp.Clien
 	// Build method URLs: <baseURL>[<prefix>]/<package>.<Service>/<Method>
 	serviceURL := sanitizeBaseURL(baseURL)
 	serviceURL += baseServicePath(pathPrefix, "", "Storage")
-	urls := [2]string{
+	urls := [4]string{
 		serviceURL + "Search",
 		serviceURL + "Get",
+		serviceURL + "Total",
+		serviceURL + "Save",
 	}
 
 	return &storageJSONClient{
@@ -223,13 +323,13 @@ func NewStorageJSONClient(baseURL string, client HTTPClient, opts ...twirp.Clien
 	}
 }
 
-func (c *storageJSONClient) Search(ctx context.Context, in *SearchRequest) (*Response, error) {
+func (c *storageJSONClient) Search(ctx context.Context, in *SearchRequest) (*SearchResponse, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "")
 	ctx = ctxsetters.WithServiceName(ctx, "Storage")
 	ctx = ctxsetters.WithMethodName(ctx, "Search")
 	caller := c.callSearch
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *SearchRequest) (*Response, error) {
+		caller = func(ctx context.Context, req *SearchRequest) (*SearchResponse, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*SearchRequest)
@@ -240,9 +340,9 @@ func (c *storageJSONClient) Search(ctx context.Context, in *SearchRequest) (*Res
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*Response)
+				typedResp, ok := resp.(*SearchResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*Response) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*SearchResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -252,8 +352,8 @@ func (c *storageJSONClient) Search(ctx context.Context, in *SearchRequest) (*Res
 	return caller(ctx, in)
 }
 
-func (c *storageJSONClient) callSearch(ctx context.Context, in *SearchRequest) (*Response, error) {
-	out := new(Response)
+func (c *storageJSONClient) callSearch(ctx context.Context, in *SearchRequest) (*SearchResponse, error) {
+	out := new(SearchResponse)
 	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[0], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
@@ -269,13 +369,13 @@ func (c *storageJSONClient) callSearch(ctx context.Context, in *SearchRequest) (
 	return out, nil
 }
 
-func (c *storageJSONClient) Get(ctx context.Context, in *GetRequest) (*Response, error) {
+func (c *storageJSONClient) Get(ctx context.Context, in *GetRequest) (*User, error) {
 	ctx = ctxsetters.WithPackageName(ctx, "")
 	ctx = ctxsetters.WithServiceName(ctx, "Storage")
 	ctx = ctxsetters.WithMethodName(ctx, "Get")
 	caller := c.callGet
 	if c.interceptor != nil {
-		caller = func(ctx context.Context, req *GetRequest) (*Response, error) {
+		caller = func(ctx context.Context, req *GetRequest) (*User, error) {
 			resp, err := c.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*GetRequest)
@@ -286,9 +386,9 @@ func (c *storageJSONClient) Get(ctx context.Context, in *GetRequest) (*Response,
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*Response)
+				typedResp, ok := resp.(*User)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*Response) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*User) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -298,9 +398,101 @@ func (c *storageJSONClient) Get(ctx context.Context, in *GetRequest) (*Response,
 	return caller(ctx, in)
 }
 
-func (c *storageJSONClient) callGet(ctx context.Context, in *GetRequest) (*Response, error) {
-	out := new(Response)
+func (c *storageJSONClient) callGet(ctx context.Context, in *GetRequest) (*User, error) {
+	out := new(User)
 	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[1], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
+}
+
+func (c *storageJSONClient) Total(ctx context.Context, in *TotalRequest) (*TotalResponse, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "")
+	ctx = ctxsetters.WithServiceName(ctx, "Storage")
+	ctx = ctxsetters.WithMethodName(ctx, "Total")
+	caller := c.callTotal
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *TotalRequest) (*TotalResponse, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*TotalRequest)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*TotalRequest) when calling interceptor")
+					}
+					return c.callTotal(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*TotalResponse)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*TotalResponse) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *storageJSONClient) callTotal(ctx context.Context, in *TotalRequest) (*TotalResponse, error) {
+	out := new(TotalResponse)
+	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[2], in, out)
+	if err != nil {
+		twerr, ok := err.(twirp.Error)
+		if !ok {
+			twerr = twirp.InternalErrorWith(err)
+		}
+		callClientError(ctx, c.opts.Hooks, twerr)
+		return nil, err
+	}
+
+	callClientResponseReceived(ctx, c.opts.Hooks)
+
+	return out, nil
+}
+
+func (c *storageJSONClient) Save(ctx context.Context, in *User) (*SaveResponse, error) {
+	ctx = ctxsetters.WithPackageName(ctx, "")
+	ctx = ctxsetters.WithServiceName(ctx, "Storage")
+	ctx = ctxsetters.WithMethodName(ctx, "Save")
+	caller := c.callSave
+	if c.interceptor != nil {
+		caller = func(ctx context.Context, req *User) (*SaveResponse, error) {
+			resp, err := c.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*User)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*User) when calling interceptor")
+					}
+					return c.callSave(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*SaveResponse)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*SaveResponse) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+	return caller(ctx, in)
+}
+
+func (c *storageJSONClient) callSave(ctx context.Context, in *User) (*SaveResponse, error) {
+	out := new(SaveResponse)
+	ctx, err := doJSONRequest(ctx, c.client, c.opts.Hooks, c.urls[3], in, out)
 	if err != nil {
 		twerr, ok := err.(twirp.Error)
 		if !ok {
@@ -360,7 +552,7 @@ func (s *storageServer) writeError(ctx context.Context, resp http.ResponseWriter
 	writeError(ctx, resp, err, s.hooks)
 }
 
-// handleRequestBodyError is used to handle error when the twirp http cannot read request
+// handleRequestBodyError is used to handle error when the twirp server cannot read request
 func (s *storageServer) handleRequestBodyError(ctx context.Context, resp http.ResponseWriter, msg string, err error) {
 	if context.Canceled == ctx.Err() {
 		s.writeError(ctx, resp, twirp.NewError(twirp.Canceled, "failed to read request: context canceled"))
@@ -418,6 +610,12 @@ func (s *storageServer) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	case "Get":
 		s.serveGet(ctx, resp, req)
 		return
+	case "Total":
+		s.serveTotal(ctx, resp, req)
+		return
+	case "Save":
+		s.serveSave(ctx, resp, req)
+		return
 	default:
 		msg := fmt.Sprintf("no handler for path %q", req.URL.Path)
 		s.writeError(ctx, resp, badRouteError(msg, req.Method, req.URL.Path))
@@ -467,7 +665,7 @@ func (s *storageServer) serveSearchJSON(ctx context.Context, resp http.ResponseW
 
 	handler := s.Storage.Search
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *SearchRequest) (*Response, error) {
+		handler = func(ctx context.Context, req *SearchRequest) (*SearchResponse, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*SearchRequest)
@@ -478,9 +676,9 @@ func (s *storageServer) serveSearchJSON(ctx context.Context, resp http.ResponseW
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*Response)
+				typedResp, ok := resp.(*SearchResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*Response) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*SearchResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -489,7 +687,7 @@ func (s *storageServer) serveSearchJSON(ctx context.Context, resp http.ResponseW
 	}
 
 	// Call service method
-	var respContent *Response
+	var respContent *SearchResponse
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -500,7 +698,7 @@ func (s *storageServer) serveSearchJSON(ctx context.Context, resp http.ResponseW
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *Response and nil error while calling Search. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *SearchResponse and nil error while calling Search. nil responses are not supported"))
 		return
 	}
 
@@ -548,7 +746,7 @@ func (s *storageServer) serveSearchProtobuf(ctx context.Context, resp http.Respo
 
 	handler := s.Storage.Search
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *SearchRequest) (*Response, error) {
+		handler = func(ctx context.Context, req *SearchRequest) (*SearchResponse, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*SearchRequest)
@@ -559,9 +757,9 @@ func (s *storageServer) serveSearchProtobuf(ctx context.Context, resp http.Respo
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*Response)
+				typedResp, ok := resp.(*SearchResponse)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*Response) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*SearchResponse) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -570,7 +768,7 @@ func (s *storageServer) serveSearchProtobuf(ctx context.Context, resp http.Respo
 	}
 
 	// Call service method
-	var respContent *Response
+	var respContent *SearchResponse
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -581,7 +779,7 @@ func (s *storageServer) serveSearchProtobuf(ctx context.Context, resp http.Respo
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *Response and nil error while calling Search. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *SearchResponse and nil error while calling Search. nil responses are not supported"))
 		return
 	}
 
@@ -647,7 +845,7 @@ func (s *storageServer) serveGetJSON(ctx context.Context, resp http.ResponseWrit
 
 	handler := s.Storage.Get
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *GetRequest) (*Response, error) {
+		handler = func(ctx context.Context, req *GetRequest) (*User, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*GetRequest)
@@ -658,9 +856,9 @@ func (s *storageServer) serveGetJSON(ctx context.Context, resp http.ResponseWrit
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*Response)
+				typedResp, ok := resp.(*User)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*Response) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*User) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -669,7 +867,7 @@ func (s *storageServer) serveGetJSON(ctx context.Context, resp http.ResponseWrit
 	}
 
 	// Call service method
-	var respContent *Response
+	var respContent *User
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -680,7 +878,7 @@ func (s *storageServer) serveGetJSON(ctx context.Context, resp http.ResponseWrit
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *Response and nil error while calling Get. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *User and nil error while calling Get. nil responses are not supported"))
 		return
 	}
 
@@ -728,7 +926,7 @@ func (s *storageServer) serveGetProtobuf(ctx context.Context, resp http.Response
 
 	handler := s.Storage.Get
 	if s.interceptor != nil {
-		handler = func(ctx context.Context, req *GetRequest) (*Response, error) {
+		handler = func(ctx context.Context, req *GetRequest) (*User, error) {
 			resp, err := s.interceptor(
 				func(ctx context.Context, req interface{}) (interface{}, error) {
 					typedReq, ok := req.(*GetRequest)
@@ -739,9 +937,9 @@ func (s *storageServer) serveGetProtobuf(ctx context.Context, resp http.Response
 				},
 			)(ctx, req)
 			if resp != nil {
-				typedResp, ok := resp.(*Response)
+				typedResp, ok := resp.(*User)
 				if !ok {
-					return nil, twirp.InternalError("failed type assertion resp.(*Response) when calling interceptor")
+					return nil, twirp.InternalError("failed type assertion resp.(*User) when calling interceptor")
 				}
 				return typedResp, err
 			}
@@ -750,7 +948,7 @@ func (s *storageServer) serveGetProtobuf(ctx context.Context, resp http.Response
 	}
 
 	// Call service method
-	var respContent *Response
+	var respContent *User
 	func() {
 		defer ensurePanicResponses(ctx, resp, s.hooks)
 		respContent, err = handler(ctx, reqContent)
@@ -761,7 +959,367 @@ func (s *storageServer) serveGetProtobuf(ctx context.Context, resp http.Response
 		return
 	}
 	if respContent == nil {
-		s.writeError(ctx, resp, twirp.InternalError("received a nil *Response and nil error while calling Get. nil responses are not supported"))
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *User and nil error while calling Get. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	respBytes, err := proto.Marshal(respContent)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal proto response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	resp.Header().Set("Content-Type", "application/protobuf")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
+}
+
+func (s *storageServer) serveTotal(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	header := req.Header.Get("Content-Type")
+	i := strings.Index(header, ";")
+	if i == -1 {
+		i = len(header)
+	}
+	switch strings.TrimSpace(strings.ToLower(header[:i])) {
+	case "application/json":
+		s.serveTotalJSON(ctx, resp, req)
+	case "application/protobuf":
+		s.serveTotalProtobuf(ctx, resp, req)
+	default:
+		msg := fmt.Sprintf("unexpected Content-Type: %q", req.Header.Get("Content-Type"))
+		twerr := badRouteError(msg, req.Method, req.URL.Path)
+		s.writeError(ctx, resp, twerr)
+	}
+}
+
+func (s *storageServer) serveTotalJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "Total")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	d := json.NewDecoder(req.Body)
+	rawReqBody := json.RawMessage{}
+	if err := d.Decode(&rawReqBody); err != nil {
+		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
+		return
+	}
+	reqContent := new(TotalRequest)
+	unmarshaler := protojson.UnmarshalOptions{DiscardUnknown: true}
+	if err = unmarshaler.Unmarshal(rawReqBody, reqContent); err != nil {
+		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
+		return
+	}
+
+	handler := s.Storage.Total
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *TotalRequest) (*TotalResponse, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*TotalRequest)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*TotalRequest) when calling interceptor")
+					}
+					return s.Storage.Total(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*TotalResponse)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*TotalResponse) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *TotalResponse
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *TotalResponse and nil error while calling Total. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	marshaler := &protojson.MarshalOptions{UseProtoNames: !s.jsonCamelCase, EmitUnpopulated: !s.jsonSkipDefaults}
+	respBytes, err := marshaler.Marshal(respContent)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal json response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	resp.Header().Set("Content-Type", "application/json")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
+}
+
+func (s *storageServer) serveTotalProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "Total")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	buf, err := io.ReadAll(req.Body)
+	if err != nil {
+		s.handleRequestBodyError(ctx, resp, "failed to read request body", err)
+		return
+	}
+	reqContent := new(TotalRequest)
+	if err = proto.Unmarshal(buf, reqContent); err != nil {
+		s.writeError(ctx, resp, malformedRequestError("the protobuf request could not be decoded"))
+		return
+	}
+
+	handler := s.Storage.Total
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *TotalRequest) (*TotalResponse, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*TotalRequest)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*TotalRequest) when calling interceptor")
+					}
+					return s.Storage.Total(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*TotalResponse)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*TotalResponse) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *TotalResponse
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *TotalResponse and nil error while calling Total. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	respBytes, err := proto.Marshal(respContent)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal proto response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	resp.Header().Set("Content-Type", "application/protobuf")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
+}
+
+func (s *storageServer) serveSave(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	header := req.Header.Get("Content-Type")
+	i := strings.Index(header, ";")
+	if i == -1 {
+		i = len(header)
+	}
+	switch strings.TrimSpace(strings.ToLower(header[:i])) {
+	case "application/json":
+		s.serveSaveJSON(ctx, resp, req)
+	case "application/protobuf":
+		s.serveSaveProtobuf(ctx, resp, req)
+	default:
+		msg := fmt.Sprintf("unexpected Content-Type: %q", req.Header.Get("Content-Type"))
+		twerr := badRouteError(msg, req.Method, req.URL.Path)
+		s.writeError(ctx, resp, twerr)
+	}
+}
+
+func (s *storageServer) serveSaveJSON(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "Save")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	d := json.NewDecoder(req.Body)
+	rawReqBody := json.RawMessage{}
+	if err := d.Decode(&rawReqBody); err != nil {
+		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
+		return
+	}
+	reqContent := new(User)
+	unmarshaler := protojson.UnmarshalOptions{DiscardUnknown: true}
+	if err = unmarshaler.Unmarshal(rawReqBody, reqContent); err != nil {
+		s.handleRequestBodyError(ctx, resp, "the json request could not be decoded", err)
+		return
+	}
+
+	handler := s.Storage.Save
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *User) (*SaveResponse, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*User)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*User) when calling interceptor")
+					}
+					return s.Storage.Save(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*SaveResponse)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*SaveResponse) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *SaveResponse
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *SaveResponse and nil error while calling Save. nil responses are not supported"))
+		return
+	}
+
+	ctx = callResponsePrepared(ctx, s.hooks)
+
+	marshaler := &protojson.MarshalOptions{UseProtoNames: !s.jsonCamelCase, EmitUnpopulated: !s.jsonSkipDefaults}
+	respBytes, err := marshaler.Marshal(respContent)
+	if err != nil {
+		s.writeError(ctx, resp, wrapInternal(err, "failed to marshal json response"))
+		return
+	}
+
+	ctx = ctxsetters.WithStatusCode(ctx, http.StatusOK)
+	resp.Header().Set("Content-Type", "application/json")
+	resp.Header().Set("Content-Length", strconv.Itoa(len(respBytes)))
+	resp.WriteHeader(http.StatusOK)
+
+	if n, err := resp.Write(respBytes); err != nil {
+		msg := fmt.Sprintf("failed to write response, %d of %d bytes written: %s", n, len(respBytes), err.Error())
+		twerr := twirp.NewError(twirp.Unknown, msg)
+		ctx = callError(ctx, s.hooks, twerr)
+	}
+	callResponseSent(ctx, s.hooks)
+}
+
+func (s *storageServer) serveSaveProtobuf(ctx context.Context, resp http.ResponseWriter, req *http.Request) {
+	var err error
+	ctx = ctxsetters.WithMethodName(ctx, "Save")
+	ctx, err = callRequestRouted(ctx, s.hooks)
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+
+	buf, err := io.ReadAll(req.Body)
+	if err != nil {
+		s.handleRequestBodyError(ctx, resp, "failed to read request body", err)
+		return
+	}
+	reqContent := new(User)
+	if err = proto.Unmarshal(buf, reqContent); err != nil {
+		s.writeError(ctx, resp, malformedRequestError("the protobuf request could not be decoded"))
+		return
+	}
+
+	handler := s.Storage.Save
+	if s.interceptor != nil {
+		handler = func(ctx context.Context, req *User) (*SaveResponse, error) {
+			resp, err := s.interceptor(
+				func(ctx context.Context, req interface{}) (interface{}, error) {
+					typedReq, ok := req.(*User)
+					if !ok {
+						return nil, twirp.InternalError("failed type assertion req.(*User) when calling interceptor")
+					}
+					return s.Storage.Save(ctx, typedReq)
+				},
+			)(ctx, req)
+			if resp != nil {
+				typedResp, ok := resp.(*SaveResponse)
+				if !ok {
+					return nil, twirp.InternalError("failed type assertion resp.(*SaveResponse) when calling interceptor")
+				}
+				return typedResp, err
+			}
+			return nil, err
+		}
+	}
+
+	// Call service method
+	var respContent *SaveResponse
+	func() {
+		defer ensurePanicResponses(ctx, resp, s.hooks)
+		respContent, err = handler(ctx, reqContent)
+	}()
+
+	if err != nil {
+		s.writeError(ctx, resp, err)
+		return
+	}
+	if respContent == nil {
+		s.writeError(ctx, resp, twirp.InternalError("received a nil *SaveResponse and nil error while calling Save. nil responses are not supported"))
 		return
 	}
 
@@ -816,7 +1374,7 @@ type HTTPClient interface {
 	Do(req *http.Request) (*http.Response, error)
 }
 
-// TwirpServer is the interface generated http structs will support: they're
+// TwirpServer is the interface generated server structs will support: they're
 // HTTP handlers with additional methods for accessing metadata about the
 // service. Those accessors are a low-level API for building reflection tools.
 // Most people can think of TwirpServers as just http.Handlers.
@@ -862,7 +1420,7 @@ func newServerOpts(opts []interface{}) *twirp.ServerOptions {
 }
 
 // WriteError writes an HTTP response with a valid Twirp error format (code, msg, meta).
-// Useful outside of the Twirp http (e.g. http middleware), but does not trigger hooks.
+// Useful outside of the Twirp server (e.g. http middleware), but does not trigger hooks.
 // If err is not a twirp.Error, it will get wrapped with twirp.InternalErrorWith(err)
 func WriteError(resp http.ResponseWriter, err error) {
 	writeError(context.Background(), resp, err, nil)
@@ -1036,7 +1594,7 @@ func errorFromResponse(resp *http.Response) twirp.Error {
 
 	respBodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return wrapInternal(err, "failed to read http error response body")
+		return wrapInternal(err, "failed to read server error response body")
 	}
 
 	var tj twerrJSON
@@ -1050,7 +1608,7 @@ func errorFromResponse(resp *http.Response) twirp.Error {
 
 	errorCode := twirp.ErrorCode(tj.Code)
 	if !twirp.IsValidErrorCode(errorCode) {
-		msg := "invalid type returned from http error response: " + tj.Code
+		msg := "invalid type returned from server error response: " + tj.Code
 		return twirp.InternalError(msg).WithMeta("body", string(respBodyBytes))
 	}
 
@@ -1163,12 +1721,12 @@ func (e *internalWithCause) Meta(key string) string                      { retur
 func (e *internalWithCause) MetaMap() map[string]string                  { return nil }
 func (e *internalWithCause) WithMeta(key string, val string) twirp.Error { return e }
 
-// malformedRequestError is used when the twirp http cannot unmarshal a request
+// malformedRequestError is used when the twirp server cannot unmarshal a request
 func malformedRequestError(msg string) twirp.Error {
 	return twirp.NewError(twirp.Malformed, msg)
 }
 
-// badRouteError is used when the twirp http cannot route a request
+// badRouteError is used when the twirp server cannot route a request
 func badRouteError(msg string, method, url string) twirp.Error {
 	err := twirp.NewError(twirp.BadRoute, msg)
 	err = err.WithMeta("twirp_invalid_route", method+" "+url)
@@ -1366,18 +1924,24 @@ func callClientError(ctx context.Context, h *twirp.ClientHooks, err twirp.Error)
 }
 
 var twirpFileDescriptor0 = []byte{
-	// 208 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x5c, 0x90, 0x3d, 0x4f, 0x86, 0x30,
-	0x14, 0x85, 0xf3, 0xf2, 0xf2, 0x21, 0xd7, 0xc0, 0xd0, 0x38, 0x34, 0x46, 0x13, 0x03, 0x8b, 0x53,
-	0x4d, 0xf4, 0x1f, 0xb8, 0x30, 0xb9, 0xc0, 0xe6, 0x56, 0xca, 0x0d, 0x34, 0x04, 0x8a, 0xed, 0xd5,
-	0xdf, 0x6f, 0x68, 0xf1, 0x73, 0x3b, 0xe7, 0xe9, 0x93, 0xe6, 0xb4, 0x50, 0x38, 0xb4, 0x1f, 0x5a,
-	0xa1, 0xd8, 0xac, 0x21, 0x53, 0xdd, 0x00, 0x34, 0x48, 0x2d, 0xbe, 0xbd, 0xa3, 0x23, 0x56, 0x42,
-	0xa4, 0x07, 0x7e, 0xba, 0x3b, 0xdd, 0xe7, 0x6d, 0xa4, 0x87, 0xaa, 0x86, 0xa2, 0x43, 0x69, 0xd5,
-	0xf4, 0x25, 0x30, 0x88, 0x09, 0xed, 0x72, 0x28, 0x3e, 0x57, 0x2b, 0x5c, 0xb4, 0xe8, 0x36, 0xb3,
-	0x3a, 0xfc, 0x7f, 0xc1, 0xee, 0xaf, 0x5a, 0xcd, 0x3c, 0x0a, 0xfe, 0x9e, 0x3d, 0x93, 0x0b, 0xf2,
-	0xf3, 0xc1, 0xe4, 0x82, 0xec, 0x0a, 0x12, 0x47, 0x52, 0xcd, 0x3c, 0xf6, 0x30, 0x94, 0x9d, 0xf6,
-	0xda, 0xd2, 0xc4, 0x93, 0x40, 0x7d, 0x79, 0x7c, 0x81, 0xac, 0x23, 0x63, 0xe5, 0x88, 0xac, 0x86,
-	0x34, 0xec, 0x63, 0xa5, 0xf8, 0x33, 0xf4, 0x3a, 0x17, 0xdf, 0x9b, 0x6e, 0xe1, 0xdc, 0x20, 0xb1,
-	0x4b, 0xf1, 0xf3, 0xd0, 0x5f, 0xc7, 0xcf, 0xd9, 0x6b, 0xf2, 0x30, 0xda, 0x4d, 0xf5, 0xa9, 0xff,
-	0x91, 0xa7, 0xcf, 0x00, 0x00, 0x00, 0xff, 0xff, 0x92, 0xdf, 0x3e, 0x38, 0x22, 0x01, 0x00, 0x00,
+	// 299 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x64, 0x51, 0xcd, 0x4e, 0x32, 0x31,
+	0x14, 0xcd, 0x30, 0x53, 0x08, 0x17, 0x66, 0xbe, 0xa4, 0xf9, 0x16, 0x75, 0x24, 0x86, 0xd4, 0x68,
+	0x70, 0x61, 0x4d, 0xf0, 0x0d, 0xdc, 0xb0, 0x2f, 0xba, 0x71, 0x57, 0x86, 0x1b, 0x18, 0x11, 0x66,
+	0x6c, 0x0b, 0x6f, 0xe2, 0xfb, 0x9a, 0xfe, 0x10, 0x01, 0x77, 0xf7, 0x9c, 0x9c, 0x73, 0x7f, 0xce,
+	0x85, 0xdc, 0xa0, 0x3e, 0xd4, 0x15, 0x8a, 0x56, 0x37, 0xb6, 0xe1, 0x37, 0x30, 0x9c, 0xab, 0x03,
+	0x4a, 0x34, 0x6d, 0xb3, 0x33, 0x48, 0x0b, 0xe8, 0xd4, 0x4b, 0x96, 0x8c, 0x93, 0x49, 0x5f, 0x76,
+	0xea, 0x25, 0x2f, 0x60, 0xf8, 0xda, 0x58, 0xf5, 0x29, 0xf1, 0x6b, 0x8f, 0xc6, 0xf2, 0x3b, 0xc8,
+	0x23, 0x8e, 0x86, 0xff, 0x40, 0xac, 0x23, 0xbc, 0x27, 0x95, 0x01, 0xf0, 0x11, 0xc0, 0x0c, 0x6d,
+	0x34, 0xfd, 0x69, 0x7a, 0x0b, 0xf9, 0x1c, 0x95, 0xae, 0xd6, 0x47, 0x01, 0x85, 0xcc, 0xa2, 0xde,
+	0x46, 0x89, 0xaf, 0xf9, 0x23, 0x14, 0x47, 0x51, 0x1c, 0x75, 0x0d, 0x64, 0x6f, 0x50, 0x1b, 0x96,
+	0x8c, 0xd3, 0xc9, 0x60, 0x4a, 0xc4, 0x9b, 0x41, 0x2d, 0x03, 0xc7, 0x3f, 0x20, 0x73, 0xf0, 0x72,
+	0x96, 0x6b, 0xbd, 0xab, 0xab, 0x0d, 0xeb, 0x84, 0xd6, 0xae, 0xf6, 0x9c, 0xda, 0x22, 0x4b, 0x23,
+	0xa7, 0xb6, 0xfe, 0x0e, 0x63, 0x55, 0xb5, 0x61, 0xd9, 0x38, 0x9d, 0xf4, 0x65, 0x00, 0x8e, 0x5d,
+	0xd4, 0xda, 0xae, 0x19, 0xf1, 0xd2, 0x00, 0xa6, 0xdf, 0x09, 0xf4, 0xe6, 0xb6, 0xd1, 0x6a, 0x85,
+	0xf4, 0x01, 0xba, 0x61, 0x4d, 0x5a, 0x88, 0xb3, 0xa3, 0xca, 0x7f, 0xe2, 0x62, 0xff, 0x2b, 0x48,
+	0x67, 0x68, 0xe9, 0x40, 0xfc, 0x46, 0x53, 0x86, 0x23, 0xe8, 0x3d, 0x10, 0x1f, 0x2b, 0xcd, 0xc5,
+	0x69, 0xdc, 0x65, 0x21, 0xce, 0xd3, 0x1e, 0x41, 0xe6, 0xde, 0x45, 0x83, 0xad, 0xcc, 0xc5, 0xe9,
+	0xf3, 0x5e, 0x7a, 0xef, 0xe4, 0x69, 0xa5, 0xdb, 0x6a, 0xd1, 0xf5, 0xcf, 0x7d, 0xfe, 0x09, 0x00,
+	0x00, 0xff, 0xff, 0x1f, 0x30, 0x53, 0x97, 0xed, 0x01, 0x00, 0x00,
 }

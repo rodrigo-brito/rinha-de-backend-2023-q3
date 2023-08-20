@@ -1,6 +1,8 @@
 package search
 
 import (
+	"log"
+
 	"github.com/blevesearch/bleve"
 	"github.com/blevesearch/bleve/analysis"
 	"github.com/blevesearch/bleve/analysis/char/asciifolding"
@@ -13,20 +15,34 @@ import (
 )
 
 type Searcher interface {
-	Search(query string) ([]int, error)
-	Save(people entity.People) error
+	Search(query string) ([]string, error)
+	Save(user entity.User) error
 }
 
 type searcher struct {
 	index bleve.Index
 }
 
-func (s searcher) Search(query string) ([]int, error) {
-	return nil, nil
+func (s *searcher) Search(searchTerm string) ([]string, error) {
+	query := bleve.NewMatchQuery(searchTerm)
+
+	searchRequest := bleve.NewSearchRequest(query)
+	searchRequest.Fields = []string{"*"}
+	searchResult, err := s.index.Search(searchRequest)
+	if err != nil {
+		log.Println(err)
+	}
+
+	ids := make([]string, 0, len(searchResult.Hits))
+	for _, result := range searchResult.Hits {
+		ids = append(ids, result.Fields["id"].(string))
+	}
+
+	return ids, nil
 }
 
-func (s searcher) Save(people entity.People) error {
-	return nil
+func (s *searcher) Save(user entity.User) error {
+	return s.index.Index(user.ID, user)
 }
 
 const AnalyzerName = "pt-br"
@@ -77,13 +93,13 @@ func NewSearcher() (Searcher, error) {
 	textFiledMapping := bleve.NewTextFieldMapping()
 	textFiledMapping.Analyzer = AnalyzerName
 
-	peopleMapping := bleve.NewDocumentMapping()
-	peopleMapping.AddFieldMappingsAt("apelido", textFiledMapping)
-	peopleMapping.AddFieldMappingsAt("nome", textFiledMapping)
-	peopleMapping.AddFieldMappingsAt("stack", textFiledMapping)
+	userMapping := bleve.NewDocumentMapping()
+	userMapping.AddFieldMappingsAt("apelido", textFiledMapping)
+	userMapping.AddFieldMappingsAt("nome", textFiledMapping)
+	userMapping.AddFieldMappingsAt("stack", textFiledMapping)
 
 	indexMapping := bleve.NewIndexMapping()
-	indexMapping.AddDocumentMapping("phrase", peopleMapping)
+	indexMapping.AddDocumentMapping("phrase", userMapping)
 	indexMapping.TypeField = "type"
 	indexMapping.DefaultAnalyzer = AnalyzerName
 

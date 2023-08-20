@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
 	"rinha/pkg/server/grpc"
@@ -16,7 +17,8 @@ func main() {
 	}
 
 	server := grpc.NewServer(searchService, storageService)
-	err = server.Start(8080)
+	fmt.Println("Storage running at http://localhot:9000")
+	err = server.Start(9000)
 	if err != nil {
 		log.Fatalf("error starting server: %s", err)
 	}

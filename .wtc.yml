@@ -1,0 +1,16 @@
+debounce: 100
+ignore: \.git/
+trig_async: [api, storage]
+rules:
+  - name: api
+    match: \.go$
+    ignore: _test\.go$
+    env:
+      - name: ACCESS_LOG
+        value: "true"
+    command: go run cmd/api/api.go
+
+  - name: storage
+    match: \.go$
+    ignore: _test\.go$
+    command: go run cmd/storage/storage.go
