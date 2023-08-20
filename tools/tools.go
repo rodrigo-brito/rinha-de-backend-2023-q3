@@ -6,4 +6,5 @@ package tools
 import (
 	_ "github.com/rafaelsq/wtc"
 	_ "github.com/twitchtv/twirp/protoc-gen-twirp"
+	_ "go.uber.org/mock/mockgen"
 )

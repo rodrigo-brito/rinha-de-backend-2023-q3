@@ -54,7 +54,13 @@ func (s *Server) GetHandle(w http.ResponseWriter, r *http.Request) {
 
 	if user != nil {
 		w.WriteHeader(http.StatusOK)
-		err := json.NewEncoder(w).Encode(user)
+		err := json.NewEncoder(w).Encode(entity.User{
+			ID:    user.Id,
+			Nick:  user.Nick,
+			Name:  user.Name,
+			Birth: user.Birth,
+			Stack: user.Stack,
+		})
 		if err != nil {
 			slog.Error(fmt.Sprintf("error encoding user: %s", err))
 			w.WriteHeader(http.StatusInternalServerError)
@@ -121,7 +127,12 @@ func (s *Server) CreateHandle(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
 		slog.Error(fmt.Sprintf("error decoding user: %s", err))
-		w.WriteHeader(http.StatusInternalServerError)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	if !user.Validate() {
+		w.WriteHeader(http.StatusUnprocessableEntity)
 		return
 	}
 

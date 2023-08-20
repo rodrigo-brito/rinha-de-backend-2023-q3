@@ -19,5 +19,5 @@
 
 # Go workspace file
 go.work
-api
-storage
+/api
+/storage
